@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -21,7 +21,6 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA 
  */
 
-#import <WebKit/WebKit.h>
 #import "MFHyperTextView.h"
 #import "MFMForms.h"
 #import "MFBase.h"
@@ -29,6 +28,8 @@
 #import "NSColor_extras.h"
 
 @implementation MFHyperTextView
+
+//----------------------------------------------------------------------------------------------------------------------
 
 - (instancetype)initWithObject:(mforms::HyperText *)ht {
   self = [super initWithFrame:NSMakeRect(0, 0, 50, 50)];
@@ -63,21 +64,37 @@
   return self;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 STANDARD_FOCUS_HANDLING(self) // Notify backend when getting first responder status.
+
+//----------------------------------------------------------------------------------------------------------------------
 
 - (void)setBackgroundColor:(NSColor *)color {
   super.backgroundColor = color;
   mTextView.backgroundColor = color;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 - (BOOL)textView:(NSTextView *)aTextView clickedOnLink:(id)link atIndex:(NSUInteger)charIndex {
   mOwner->handle_url_click([link absoluteString].UTF8String);
   return YES;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityTextAreaRole;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
 static bool ht_create(mforms::HyperText *ht) {
   return [[MFHyperTextView alloc] initWithObject:ht] != nil;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 static void ht_set_markup(mforms::HyperText *ht, const std::string &text) {
   MFHyperTextView *htv = ht->get_data();
@@ -86,26 +103,18 @@ static void ht_set_markup(mforms::HyperText *ht, const std::string &text) {
     return;
   }
 
-  WebPreferences *defaults = [WebPreferences standardPreferences];
-
-  defaults.standardFontFamily = @"Lucida Grande";
-  defaults.defaultFontSize = NSFont.systemFontSize;
-  defaults.defaultFixedFontSize = NSFont.systemFontSize;
-  defaults.userStyleSheetEnabled = YES;
-  defaults.userStyleSheetLocation =
-    [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource: @"hypertextview" ofType: @"css"]];
-
+  NSData *html = [NSData dataWithBytes:text.data() length: text.size()];
+  NSDictionary *options = @{
+    NSTextEncodingNameDocumentOption: @"UTF-8",
+    NSBaseURLDocumentOption : [NSURL URLWithString: @""]
+  };
   [htv->mTextView.textStorage
     replaceCharactersInRange: NSMakeRange(0, htv->mTextView.textStorage.length)
-        withAttributedString: [[NSAttributedString alloc]
-                                     initWithHTML: [NSData dataWithBytes:text.data() length:text.size()]
-                                          options: @{
-                                            NSWebPreferencesDocumentOption: defaults,
-                                            NSTextEncodingNameDocumentOption: @"UTF-8",
-                                            NSBaseURLDocumentOption : [NSURL URLWithString: @""]
-                                          }
-                               documentAttributes: nil]];
+        withAttributedString: [[NSAttributedString alloc] initWithHTML: html options: options documentAttributes: nil]
+  ];
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void cf_hypertext_init() {
   ::mforms::ControlFactory *f = ::mforms::ControlFactory::get_instance();

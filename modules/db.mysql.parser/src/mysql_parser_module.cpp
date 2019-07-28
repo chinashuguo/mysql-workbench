@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -236,36 +236,12 @@ struct MySQLParserContextImpl : public MySQLParserContext {
 private:
   ParseTree *parseUnit(MySQLParseUnit unit) {
     switch (unit) {
-      case MySQLParseUnit::PuCreateSchema:
-        return parser.createDatabase();
-      case MySQLParseUnit::PuCreateTable:
-        return parser.createTable();
-      case MySQLParseUnit::PuCreateTrigger:
-        return parser.createTrigger();
-      case MySQLParseUnit::PuCreateView:
-        return parser.createView();
-      case MySQLParseUnit::PuCreateFunction:
-        return parser.createFunction();
-      case MySQLParseUnit::PuCreateProcedure:
-        return parser.createProcedure();
-      case MySQLParseUnit::PuCreateUdf:
-        return parser.createUdf();
       case MySQLParseUnit::PuCreateRoutine:
         return parser.createRoutine();
-      case MySQLParseUnit::PuCreateEvent:
-        return parser.createEvent();
-      case MySQLParseUnit::PuCreateIndex:
-        return parser.createIndex();
-      case MySQLParseUnit::PuGrant:
-        return parser.grant();
+
       case MySQLParseUnit::PuDataType:
         return parser.dataTypeDefinition();
-      case MySQLParseUnit::PuCreateLogfileGroup:
-        return parser.createLogfileGroup();
-      case MySQLParseUnit::PuCreateServer:
-        return parser.createServer();
-      case MySQLParseUnit::PuCreateTablespace:
-        return parser.createTablespace();
+
       default:
         return parser.query();
     }
@@ -606,8 +582,22 @@ void ParserErrorListener::syntaxError(Recognizer *recognizer, Token *offendingSy
 
       if (!expectedText.empty())
         message += ", expecting " + expectedText;
-    } catch (FailedPredicateException &) {
-      message = "FailedPredicateException"; // TODO: find a case that throws this.
+    } catch (FailedPredicateException &e) {
+      // For cases like "... | a ({condition}? b)", but not "... | a ({condition}? b)?".
+      std::string condition = e.what();
+      static std::string prefix = "predicate failed: ";
+      condition.erase(0, prefix.size());
+      condition.resize(condition.size() - 1); // Remove trailing question mark.
+
+      std::size_t index;
+      while ((index = condition.find("serverVersion")) != std::string::npos) {
+        condition.replace(index, 13, "server version");
+      }
+
+      if ((index = condition.find("&&")) != std::string::npos) {
+        condition.replace(index, 2, "and");
+      }
+      message = wrongText + " is valid only for " + condition;
     } catch (NoViableAltException &) {
       if (isEof)
         message = "Statement is incomplete";
@@ -1006,7 +996,7 @@ size_t MySQLParserServicesImpl::parseView(MySQLParserContext::Ref context, db_my
   } else {
     // Finished with errors. See if we can get at least the view name out.
     auto viewTree = dynamic_cast<MySQLParser::CreateViewContext *>(tree);
-    if (viewTree->viewName() != nullptr) {
+    if (viewTree != nullptr && viewTree->viewName() != nullptr) {
       IdentifierListener listener(viewTree->viewName());
       view->name(listener.parts.back() + "_SYNTAX_ERROR");
     }
@@ -1324,7 +1314,7 @@ size_t MySQLParserServicesImpl::parseLogfileGroup(MySQLParserContext::Ref contex
 
     LogfileGroupListener(tree, catalog, group, impl->caseSensitive);
   } else {
-    // Finished with errors. See if we can get at least the table name out.
+    // Finished with errors. See if we can get at least the group name out.
     auto groupTree = dynamic_cast<MySQLParser::CreateLogfileGroupContext *>(tree);
     if (groupTree->logfileGroupName() != nullptr) {
       IdentifierListener listener(groupTree->logfileGroupName());
@@ -2239,7 +2229,7 @@ static const unsigned char *skipLeadingWhitespace(const unsigned char *head, con
 
 //----------------------------------------------------------------------------------------------------------------------
 
-bool isLineBreak(const unsigned char *head, const unsigned char *line_break) {
+static bool isLineBreak(const unsigned char *head, const unsigned char *line_break) {
   if (*line_break == '\0')
     return false;
 
@@ -2362,7 +2352,7 @@ size_t MySQLParserServicesImpl::determineStatementRanges(const char *sql, size_t
       case '\'':
       case '`': { // Quoted string/id. Skip this in a local loop.
         haveContent = true;
-        char quote = *tail++;
+        unsigned char quote = *tail++;
         while (tail < end && *tail != quote) {
           // Skip any escaped character too.
           if (*tail == '\\')
@@ -2501,16 +2491,7 @@ public:
   }
 
   virtual void exitRoleOrPrivilege(MySQLParser::RoleOrPrivilegeContext *ctx) override {
-    std::string privilege;
-    for (auto child : ctx->children) {
-      if (!privilege.empty())
-        privilege += " ";
-      if (antlrcpp::is<TerminalNode *>(child))
-        privilege += dynamic_cast<TerminalNode *>(child)->getText();
-      else
-        privilege += MySQLBaseLexer::sourceTextForContext(dynamic_cast<ParserRuleContext *>(child));
-    }
-    _privileges.insert(privilege);
+    _privileges.insert(MySQLBaseLexer::sourceTextForContext(ctx));
   }
 
   virtual void enterUser(MySQLParser::UserContext *ctx) override {
@@ -2523,7 +2504,7 @@ public:
   /**
    * Exclusively for pre-8.0 servers.
    */
-  virtual void exitCreateOrAlterUser(MySQLParser::CreateOrAlterUserContext *ctx) override {
+  virtual void exitCreateUserEntry(MySQLParser::CreateUserEntryContext *ctx) override {
     if (ctx->BY_SYMBOL() != nullptr) {
       _currentUser.gset("id_method", "PASSWORD");
       _currentUser.gset("id_string", base::unquote(ctx->textString()->getText()));

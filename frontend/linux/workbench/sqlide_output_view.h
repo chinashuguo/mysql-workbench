@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -26,7 +26,7 @@
 
 #include "mforms/toolbar.h"
 #include "sqlide/wb_sql_editor_form.h"
-#include "sqlide/grid_view.h"
+#include "grid_view.h"
 #include <glib.h>
 
 #include <gtkmm/box.h>

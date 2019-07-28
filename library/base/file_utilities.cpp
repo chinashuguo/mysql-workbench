@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -20,7 +20,6 @@
  * along with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA 
  */
-
 
 #include "base/string_utilities.h"
 #include "base/file_utilities.h"
@@ -206,8 +205,7 @@ namespace base {
     }
   }
 #else
-  LockFile::LockFile(const std::string &apath) throw(std::invalid_argument, std::runtime_error, file_locked_error)
-    : path(apath) {
+  LockFile::LockFile(const std::string &apath) : path(apath) {
     if (path.empty())
       throw std::invalid_argument("invalid path");
 

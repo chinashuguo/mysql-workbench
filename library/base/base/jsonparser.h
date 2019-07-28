@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -225,7 +225,9 @@ namespace JsonParser {
   };
 
 #ifndef HAS_NOEXCEPT
-  #if defined(_MSC_VER) || defined(__APPLE__)
+  #if defined(_MSC_VER) 
+    #define NOEXCEPT noexcept
+  #elif defined(__APPLE__)
     #define NOEXCEPT _NOEXCEPT
   #else
     #ifndef _GLIBCXX_USE_NOEXCEPT

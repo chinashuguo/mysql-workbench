@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -55,12 +55,6 @@
 #define MYSQLGRT_PUBLIC
 #endif
 
-#ifdef _MSC_VER
-#define THROW(...)
-#else
-#define THROW(...) throw(__VA_ARGS__)
-#endif
-
 #include <set>
 
 #define GRT_VERSION "4.1.0"
@@ -106,8 +100,6 @@ namespace grt {
 
   class MYSQLGRT_PUBLIC bad_item : public std::logic_error {
   public:
-    //    virtual ~bad_item() THROW() {};
-
     bad_item(size_t index, size_t count) : std::logic_error("Index out of range.") {
     }
     bad_item(const std::string &name) : std::logic_error("Invalid item name '" + name + "'.") {
@@ -132,7 +124,7 @@ namespace grt {
       : std::runtime_error(exc), detail(adetail), fatal(afatal) {
     }
 
-    virtual ~grt_runtime_error() THROW() {
+    virtual ~grt_runtime_error() {
     }
   };
 
@@ -141,7 +133,7 @@ namespace grt {
     std::string inner;
     module_error(const std::string &exc, const std::string &ainner = "") : std::runtime_error(exc), inner(ainner) {
     }
-    virtual ~module_error() THROW() {
+    virtual ~module_error() {
     }
   };
 
@@ -159,7 +151,7 @@ namespace grt {
     }
     server_denied(const std::string &exc, int err) : std::runtime_error(exc), errNo(err) {
     }
-    virtual ~server_denied() THROW() {
+    virtual ~server_denied() {
     }
   };
 
@@ -1220,10 +1212,15 @@ namespace grt {
     ListRef() {
     }
 
-    ListRef(bool allow_null) : BaseListRef(ObjectType, O::static_class_name(), 0, allow_null) {
+    ListRef(bool allow_null)
+      : BaseListRef(ObjectType, O::static_class_name(), 0, allow_null) {
     }
 
     ListRef(internal::Object *owner, bool allow_null = true)
+      : BaseListRef(ObjectType, O::static_class_name(), owner, allow_null) {
+    }
+
+    ListRef(CreateMode mode, internal::Object *owner = nullptr, bool allow_null = true)
       : BaseListRef(ObjectType, O::static_class_name(), owner, allow_null) {
     }
 
@@ -1328,7 +1325,15 @@ namespace grt {
     ListRef() {
     }
 
-    ListRef(CreateMode mode, internal::Object *owner = 0, bool allow_null = true)
+    ListRef(bool allow_null)
+      : BaseListRef(IntegerType, "", 0, allow_null) {
+    }
+
+    ListRef(internal::Object *owner, bool allow_null = true)
+      : BaseListRef(IntegerType, "", owner, allow_null) {
+    }
+
+    ListRef(CreateMode mode, internal::Object *owner = nullptr, bool allow_null = true)
       : BaseListRef(IntegerType, "", owner, allow_null) {
     }
 
@@ -1398,7 +1403,15 @@ namespace grt {
     ListRef() {
     }
 
-    ListRef(CreateMode mode, internal::Object *owner = 0, bool allow_null = true)
+    ListRef(bool allow_null)
+      : BaseListRef(DoubleType, "", 0, allow_null) {
+    }
+
+    ListRef(internal::Object *owner, bool allow_null = true)
+      : BaseListRef(DoubleType, "", owner, allow_null) {
+    }
+
+    ListRef(CreateMode mode, internal::Object *owner = nullptr, bool allow_null = true)
       : BaseListRef(DoubleType, "", owner, allow_null) {
     }
 
@@ -1471,6 +1484,14 @@ namespace grt {
     ListRef() {
     }
 
+    ListRef(bool allow_null)
+      : BaseListRef(StringType, "", 0, allow_null) {
+    }
+
+    ListRef(internal::Object *owner, bool allow_null = true)
+      : BaseListRef(StringType, "", owner, allow_null) {
+    }
+
     ListRef(CreateMode mode, internal::Object *owner = nullptr, bool allow_null = true)
       : BaseListRef(StringType, "", owner, allow_null) {
     }
@@ -1483,7 +1504,7 @@ namespace grt {
       return true;
     }
 
-    static ListRef<internal::String> cast_from(const ValueRef &value) THROW(type_error) {
+    static ListRef<internal::String> cast_from(const ValueRef &value) {
       return ListRef<internal::String>(value);
     }
 
@@ -1491,21 +1512,15 @@ namespace grt {
       content().insert_unchecked(value, index);
     }
 
-    /*
-    inline Reference operator[](size_t index) THROW (bad_item)
-    {
-//      return
-    }*/
-
     inline StringRef operator[](size_t index) const {
       return get(index);
     }
 
-    inline StringRef get(size_t index) const THROW(bad_item) {
+    inline StringRef get(size_t index) const {
       return StringRef::cast_from(content().get(index));
     }
 
-    inline void set(size_t index, const StringRef &value) THROW(bad_item, std::invalid_argument) {
+    inline void set(size_t index, const StringRef &value) {
       content().set_unchecked(index, value);
     }
 
@@ -1736,7 +1751,15 @@ namespace grt {
     ListRef() {
     }
 
-    ListRef(CreateMode mode, internal::Object *owner = 0, bool allow_null = true)
+    ListRef(bool allow_null)
+      : BaseListRef(DictType, "", 0, allow_null) {
+    }
+
+    ListRef(internal::Object *owner, bool allow_null = true)
+      : BaseListRef(DictType, "", owner, allow_null) {
+    }
+
+    ListRef(CreateMode mode, internal::Object *owner = nullptr, bool allow_null = true)
       : BaseListRef(DictType, "", owner, allow_null) {
     }
 

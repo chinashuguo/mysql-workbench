@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2018 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2019 Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -340,7 +340,13 @@ namespace mforms {
     gboolean mformsGTKAccessible::AtkComponentIface::grabFocus(AtkComponent *component) {
       auto *thisAccessible = FromAccessible(reinterpret_cast<GtkAccessible*>(component));
       if (thisAccessible != nullptr) {
-        return thisAccessible->_mformsAcc->accessibilityGrabFocus();
+        auto mGtk = mformsGTK::FromWidget(gtk_accessible_get_widget(GTK_ACCESSIBLE(component)));
+        GtkWidget *widget = mGtk->_windowMain;
+        bool ret = thisAccessible->_mformsAcc->accessibilityGrabFocus();
+        if (ret) {
+          gtk_widget_grab_focus(widget);
+        }
+        return ret;
       }
       return FALSE;
     }
@@ -393,7 +399,7 @@ namespace mforms {
       auto mformsGtkAcc = FromAccessible(accessible);
       if (mformsGtkAcc != nullptr && mformsGtkAcc->_mformsAcc != nullptr) {
         if (mformsGtkAcc->_name.empty())
-          mformsGtkAcc->_name = mformsGtkAcc->_mformsAcc->getAccessibilityName();
+          mformsGtkAcc->_name = mformsGtkAcc->_mformsAcc->getAccessibilityDescription();
 
         if (!mformsGtkAcc->_name.empty())
           return mformsGtkAcc->_name.c_str();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 using MySQL.Base;
@@ -45,7 +46,14 @@ namespace MySQL.Utilities
       return menu;
     }
 
-    public static Keys convertShortcut(String shortcut)
+    [DllImport("user32.dll")]
+    public static extern int ToUnicode(uint virtualKeyCode, uint scanCode,
+                                       byte[] keyboardState,
+                                       [Out, MarshalAs(UnmanagedType.LPWStr, SizeConst = 64)] System.Text.StringBuilder receivingBuffer,
+                                       int bufferSize, uint flags);
+
+
+        public static Keys convertShortcut(String shortcut)
     {
       Keys result = Keys.None;
 
@@ -74,6 +82,15 @@ namespace MySQL.Utilities
               break;
             case "Slash":
               shortcutString = "Divide";
+              Keys key = (Keys)Enum.Parse(typeof(Keys), "Oem2", true);
+
+              var mappedString = new System.Text.StringBuilder(256);
+              ToUnicode((uint)key, 0, new byte[256], mappedString, 256, 0);
+
+              if (mappedString.ToString() == "/") {
+                result |= key;
+                return result;
+              }
               break;
             default:
               shortcutString = k;
@@ -106,6 +123,7 @@ namespace MySQL.Utilities
       foreach (MySQL.Base.MenuItem subitem in menuItems)
       {
         Keys shortcut = convertShortcut(subitem.get_shortcut());
+
 
         switch (subitem.get_type())
         {

@@ -1,4 +1,4 @@
-# Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License, version 2.0,
@@ -919,22 +919,20 @@ class WbAdminSchemaListTab(mforms.Box):
 
     def get_mysql_password(self, reset_password=False):
         parameterValues = self.server_profile.db_connection_params.parameterValues
-        pwd = parameterValues["password"]
-        if not pwd or reset_password:
-            username = parameterValues["userName"]
-            host = self.server_profile.db_connection_params.hostIdentifier
-            title = self.is_importing and "Import" or "Export"
-            if self.bad_password_detected:
-                title += ' (type the correct password)'
-                self.bad_password_detected = False
+        username = parameterValues["userName"]
+        host = self.server_profile.db_connection_params.hostIdentifier
+        title = self.is_importing and "Import" or "Export"
+        if self.bad_password_detected:
+            title += ' (type the correct password)'
+            self.bad_password_detected = False
 
-            if not reset_password and not self.bad_password_detected:
-                pwd = self.owner.ctrl_be.get_mysql_password()
+        if not reset_password and not self.bad_password_detected:
+            pwd = self.owner.ctrl_be.get_mysql_password()
 
-            if pwd is None:
-                accepted, pwd = mforms.Utilities.find_or_ask_for_password(title, host, username, reset_password)
-                if not accepted:
-                    return None
+        if pwd is None:
+            accepted, pwd = mforms.Utilities.find_or_ask_for_password(title, host, username, reset_password)
+            if not accepted:
+                return None
         return pwd
 
     def stop(self):
@@ -1107,6 +1105,7 @@ class WbAdminImportTab(WbAdminSchemaListTab):
                         if tables_by_schema.has_key(schema):
                             tables, selection = tables_by_schema[schema]
                             if table in tables:
+                                self.schema_list.thaw_refresh()
                                 message = "The selected folder doesn't appear to be valid. Multiple definitions of the same object (%s.%s) have been found." % (schema, table)
                                 Utilities.show_error("Open Dump Folder", message, "OK", "", "")
                                 return
@@ -1644,7 +1643,7 @@ class WbAdminExportTab(WbAdminSchemaListTab):
                 extra_args = []
             DumpThread.TaskData.__init__(self,title, len(views), ["--skip-triggers", " --no-data" ," --no-create-db"] + extra_args + args, [schema] + views, None, make_pipe)
 
-    def dump_to_folder(self, schemaname, tablename):
+    def dump_to_folder(self, schemaname, tablename, include_schema):
         self.close_pipe()
         path = os.path.join(self.path, normalize_filename(schemaname) + "_" + normalize_filename(tablename) + '.sql')
         i = 0
@@ -1652,7 +1651,7 @@ class WbAdminExportTab(WbAdminSchemaListTab):
         while os.path.exists(path):
             path = os.path.join(self.path, normalize_filename(schemaname) + "_" + normalize_filename(tablename) + ('%i.sql'%i))
         self.out_pipe = open(path,"w")
-        if self.include_schema_check.get_active():
+        if include_schema:
             data = self.table_list_model.get_schema_sql(schemaname)
             if type(data) is unicode:
                 data = data.encode("utf-8")
@@ -1696,6 +1695,9 @@ class WbAdminExportTab(WbAdminSchemaListTab):
         
         skip_data = True if sel_index == 2 else False
         skip_table_structure = True if sel_index == 1 else False
+        # For mysqldump >= 8.0.2 there is column-statistic arg that cause issue while executing on MySQL Server version <= 5.7.
+        # To avoid that we force add '--column-statistics=0' to mysqldump args.
+        skip_column_statistics = True if get_mysqldump_version() > Version(8, 0, 2) and self.owner.ctrl_be.target_version < Version(8, 0, 0) else False
         
         dump_routines = self.dump_routines_check.get_active()
         dump_events = self.dump_events_check.get_active()
@@ -1743,11 +1745,15 @@ class WbAdminExportTab(WbAdminSchemaListTab):
                             
                         if skip_table_structure:
                             args.append('--no-create-info')
+                        
+                        if skip_column_statistics:
+                            args.append('--column-statistics=0')
 
+                        include_schema = self.include_schema_check.get_active()
                         if skip_data:
-                            task = self.TableDumpNoData(schema,table, args, lambda schema=schema,table=table:self.dump_to_folder(schema, table))
+                            task = self.TableDumpNoData(schema,table, args, lambda schema=schema,table=table:self.dump_to_folder(schema, table, include_schema))
                         else:
-                            task = self.TableDumpData(schema,table, args, lambda schema=schema,table=table:self.dump_to_folder(schema, table))
+                            task = self.TableDumpData(schema,table, args, lambda schema=schema,table=table:self.dump_to_folder(schema, table, include_schema))
                         operations.append(task)
                 # dump everything non-tables to file for routines
                 #if views:
@@ -1762,7 +1768,7 @@ class WbAdminExportTab(WbAdminSchemaListTab):
                         args.append("--routines")
                     if dump_events:
                         args.append("--events")
-                    task = self.ViewsRoutinesEventsDumpData(schema, views, args, lambda schema=schema, table=None:self.dump_to_folder(schema, "routines"))
+                    task = self.ViewsRoutinesEventsDumpData(schema, views, args, lambda schema=schema, table=None:self.dump_to_folder(schema, "routines", include_schema))
                     operations.append(task)
         else: # single file
             if not os.path.exists(os.path.dirname(self.path)):
@@ -1803,6 +1809,9 @@ class WbAdminExportTab(WbAdminSchemaListTab):
 
                     if skip_data or not tables:
                         params.append("--no-data")
+                    
+                    if skip_column_statistics:
+                        params.append('--column-statistics=0')
 
                     if not tables or skip_table_structure:
                         params.append("--no-create-info=TRUE")
@@ -1811,7 +1820,8 @@ class WbAdminExportTab(WbAdminSchemaListTab):
                         params.append("--skip-triggers")
 
                     # description, object_count, pipe_factory, extra_args, objects
-                    task = DumpThread.TaskData(title, len(tables), params, objects, tables_to_ignore, lambda schema=schema:self.dump_to_file([schema]))
+                    include_schema = self.include_schema_check.get_active()
+                    task = DumpThread.TaskData(title, len(tables), params, objects, tables_to_ignore, lambda schema=schema:self.dump_to_file([schema], include_schema))
                     operations.append(task)
 #                    operations.append((title, len(tables), lambda schema=schema:self.dump_to_file([schema]), params, objects))
             else:
@@ -1825,6 +1835,8 @@ class WbAdminExportTab(WbAdminSchemaListTab):
                     params.append("--events")
                 if skip_data:
                     params.append("--no-data")
+                if skip_column_statistics:
+                    params.append('--column-statistics=0')
                 
                 if single_transaction:
                     params += ["--single-transaction=TRUE", "--databases"]
@@ -1833,7 +1845,8 @@ class WbAdminExportTab(WbAdminSchemaListTab):
                 
                 # --databases includes CREATE DATABASE info, so it's not needed for dump_to_file()
                 # description, object_count, pipe_factory, extra_args, objects
-                task = DumpThread.TaskData(title, count, params, schema_names, tables_to_ignore, lambda:self.dump_to_file([]))
+                include_schema = self.include_schema_check.get_active()
+                task = DumpThread.TaskData(title, count, params, schema_names, tables_to_ignore, lambda:self.dump_to_file([], include_schema))
                 operations.append(task)
 #                operations.append((title, count, lambda:self.dump_to_file([]), params, schema_names))
 
@@ -1911,10 +1924,10 @@ class WbAdminExportTab(WbAdminSchemaListTab):
             self._update_progress_tm = None
         return r
 
-    def dump_to_file(self, schemanames):
+    def dump_to_file(self, schemanames, include_schema):
         if self.out_pipe == None:
             self.out_pipe = open(self.path,"w")
-        if self.include_schema_check.get_active():
+        if include_schema:
             for schema in schemanames:
                 self.out_pipe.write(self.table_list_model.get_schema_sql(schema).encode('utf-8'))
             self.out_pipe.flush()
@@ -2045,8 +2058,10 @@ class WbAdminExportOptionsTab(mforms.Box):
                             log_debug("Skip option %s because it's deprecated in mysqldump %s\n" % (optname, max_version))
                             continue
 
+                exlude = ['column-statistics']
                 # get the default value from mysqldump --help, if we don't have that data, use the stored default
-                default = defaults_from_mysqldump.get(optname, default)
+                if optname not in exlude or get_mysqldump_version() == target_version:
+                    default = defaults_from_mysqldump.get(optname, default)
 
                 if option_type == "BOOL":
                     checkbox = newCheckBox()

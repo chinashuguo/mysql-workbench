@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -32,14 +32,6 @@
 
 #include "grts/structs.db.mgmt.h"
 #include <cppconn/connection.h>
-
-#ifndef THROW
-#ifdef _MSC_VER
-#define THROW(...)
-#else
-#define THROW(...) throw(__VA_ARGS__)
-#endif
-#endif
 
 namespace sql {
   typedef std::shared_ptr<Connection> ConnectionPtr;
@@ -120,7 +112,7 @@ namespace sql {
     }
     AuthenticationError(const std::string &what, Authentication::Ref auth) : grt::db_login_error(what), _authobj(auth) {
     }
-    virtual ~AuthenticationError() THROW() {
+    virtual ~AuthenticationError() {
     }
 
     Authentication::Ref authentication() {

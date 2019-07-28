@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -24,7 +24,7 @@
 #ifndef _LF_VIEW_H_
 #define _LF_VIEW_H_
 
-#include <mforms/mforms.h>
+#include "mforms/mforms.h"
 #include <gdkmm/event.h>
 
 #include "lf_base.h"
@@ -72,8 +72,8 @@ namespace mforms {
       virtual int get_preferred_width();
       static int get_preferred_height(::mforms::View *self);
       virtual int get_preferred_height();
-      static int get_x(::mforms::View *self);
-      static int get_y(::mforms::View *self);
+      static int get_x(const ::mforms::View *self);
+      static int get_y(const ::mforms::View *self);
       static void set_size(::mforms::View *self, int w, int h);
       virtual void set_size(int width, int height);
       static void set_min_size(::mforms::View *self, int w, int h);

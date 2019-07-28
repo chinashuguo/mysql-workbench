@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -50,6 +50,7 @@
 #include "base/util_functions.h"
 #include "grtdb/db_helpers.h"
 #include "SSHSessionWrapper.h"
+#include "wb_version.h"
 
 using namespace wb;
 using namespace grt;
@@ -221,11 +222,11 @@ int WorkbenchImpl::isOsSupported(const std::string &os) {
   }
 
   static std::vector<std::string> supportedOsList{
-    "Ubuntu 18.04", "Ubuntu 18.10", "Debian 9",
+    "Ubuntu 19.04", "Ubuntu 18.04", "Ubuntu 18.10", "Debian 9",
 
     "Red Hat Enterprise Linux Server release 7", // Oracle 7.1 looks like this: "Red Hat Enterprise Linux Server release
                                                  // 7.1 (Maipo)"
-    "Fedora release 28", "Fedora release 29", "CentOS release 7",
+    "Fedora release 28", "Fedora release 29", "Fedora release 30", "CentOS release 7",
 
     "Windows 10", "Windows Server 2016",
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -43,7 +43,7 @@
         mTopLeftOffset = NSMakePoint(6, 2);
         mBottomRightOffset = NSMakePoint(5, 5);
 
-        self.bezelStyle = NSRoundedBezelStyle;
+        self.bezelStyle = NSBezelStyleRounded;
         break;
       case ::mforms::ToolButton:
         mTopLeftOffset = NSZeroPoint;
@@ -55,7 +55,7 @@
       case ::mforms::SmallButton:
         // buttons have some extra padding to the sides that we want to skip
         self.cell.font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
-        self.bezelStyle = NSRoundRectBezelStyle;
+        self.bezelStyle = NSBezelStyleRoundRect;
         break;
     }
     self.target = self;
@@ -109,6 +109,10 @@
 
 - (NSSize)preferredSize: (NSSize)proposal {
   return self.minimumSize;
+}
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityButtonRole;
 }
 
 static bool button_create(::mforms::Button *self, ::mforms::ButtonType type) {

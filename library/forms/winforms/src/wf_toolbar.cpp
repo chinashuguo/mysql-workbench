@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -631,18 +631,18 @@ void ToolBarWrapper::set_item_text(mforms::ToolBarItem *item, const std::string 
     case mforms::ColorSelectorItem: {
       // If this item is a color selector then find the entry with the corresponding color
       // and use its image for the selector.
-      ToolStripDropDownButton ^ button = ToolBarWrapper::GetManagedObject<ToolStripDropDownButton>(item);
+      ToolStripDropDownButton ^ dropDownButton = ToolBarWrapper::GetManagedObject<ToolStripDropDownButton>(item);
       bool found = false;
-      for each(ToolStripButton ^ button in button->DropDownItems) {
+      for each(ToolStripButton ^ button in dropDownButton->DropDownItems) {
           if (button->Text == native_text) {
-            button->Image = button->Image;
+            dropDownButton->Image = button->Image;
             found = true;
             break;
           }
         }
 
       if (!found)
-        button->Image = create_color_image(button->Text);
+        dropDownButton->Image = create_color_image(dropDownButton->Text);
 
       break;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -390,11 +390,11 @@ static void on_request_action(mforms::TextEntryAction action, mforms::Button *bt
 
 //--------------------------------------------------------------------------------------------------
 
-bool Utilities::request_input(const std::string &title, const std::string &description,
-                              const std::string &default_value, std::string &ret_value) {
+static void *_request_input_main(const std::string &title, const std::string &description,
+                                 const std::string &default_value, std::string *ret_value) {
   // In order to avoid trouble with window z-ordering we explicitly ask to hide any wait window
   // that could get in the way. Same for the splash screen.
-  hide_wait_message();
+  Utilities::hide_wait_message();
 
   mforms::Form input_form(NULL, (FormFlag)(FormDialogFrame | FormStayOnTop));
   mforms::Table content;
@@ -428,9 +428,9 @@ bool Utilities::request_input(const std::string &title, const std::string &descr
 
   button_box.set_spacing(8);
   ok_button.set_text(_("OK"));
-  //  ok_button.set_size(75, -1);
+  ok_button.set_size(75, -1);
   cancel_button.set_text(_("Cancel"));
-  //  cancel_button.set_size(75, -1);
+  cancel_button.set_size(75, -1);
   Utilities::add_end_ok_cancel_buttons(&button_box, &ok_button, &cancel_button);
   content.add(&button_box, 1, 3, 1, 2, HFillFlag | VFillFlag);
 
@@ -439,9 +439,27 @@ bool Utilities::request_input(const std::string &title, const std::string &descr
   edit.focus();
   bool result = input_form.run_modal(&ok_button, &cancel_button);
   if (result)
-    ret_value = edit.get_string_value();
+    *ret_value = edit.get_string_value();
 
-  return result;
+  return (void *)result;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+static bool _request_input(const std::string &title, const std::string &description, const std::string &default_value,
+                           std::string &ret_value) {
+  if (Utilities::in_main_thread())
+    return _request_input_main(title, description, default_value, &ret_value) != nullptr;
+  else
+    return Utilities::perform_from_main_thread(
+             std::bind(&_request_input_main, title, description, default_value, &ret_value)) != nullptr;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+bool Utilities::request_input(const std::string &title, const std::string &description,
+                              const std::string &default_value, std::string &ret_value /*out*/) {
+  return _request_input(title, description, default_value, ret_value);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -523,10 +541,14 @@ static void *_ask_for_password_main(const std::string &title, const std::string 
   // a different way to pass an additional value in. The description used for the login details
   // request is passed in the title parameter as well, separated by the pipe symbol.
   std::vector<std::string> title_parts = base::split(title, "|", 2);
+  std::string caption;
   if (title_parts.size() == 0 || title_parts[0].empty())
-    password_form.set_title(_("MySQL Workbench Authentication"));
+    caption = _("MySQL Workbench Authentication");
   else
-    password_form.set_title(title_parts[0]);
+    caption = title_parts[0];
+
+  password_form.set_title(caption);
+  password_form.set_name(caption);
 
   content.set_padding(12);
   content.set_row_count(6);

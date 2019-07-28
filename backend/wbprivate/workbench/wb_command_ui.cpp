@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -399,6 +399,14 @@ void CommandUI::add_recent_menu(mforms::MenuItem *parent) {
   grt::StringListRef strlist(_wb->get_root()->options()->recentFiles());
 
   mforms::MenuItem *item;
+  if (strlist.count() == 0) {
+    // We need at least one entry in the Open Recent menu
+    // so the menu_will_show function gets called.
+    item = mforms::manage(new mforms::MenuItem("", mforms::SeparatorMenuItem));
+    item->set_name("Separator");
+    parent->add_item(item);
+    return;
+  }
   for (size_t c = min(strlist.count(), (size_t)10), i = 0; i < c; i++) {
     std::string caption;
     if (i < 9) {
@@ -988,13 +996,18 @@ bool CommandUI::activate_command(const std::string &command, bec::ArgumentPool a
   return false;
 }
 
+static const std::vector<std::string> clipboardCommands = {"builtin:paste", "builtin:copy", "builtin:delete"};
+
 void CommandUI::activate_command(const std::string &command) {
   if (command.empty() || !_wb->user_interaction_allowed())
     return;
 
   // Finish any ongoing editing task before starting a new one.
-  _wb->request_refresh(RefreshType::RefreshFinishEdits, "");
-  _wb->flush_idle_tasks(true);
+  
+  if (std::find(clipboardCommands.begin(), clipboardCommands.end(), command) == clipboardCommands.end()) {
+    _wb->request_refresh(RefreshType::RefreshFinishEdits, "");
+    _wb->flush_idle_tasks(true);
+  }
 
   ParsedCommand cmdparts(command);
 

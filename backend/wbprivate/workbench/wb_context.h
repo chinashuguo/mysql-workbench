@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -42,8 +42,6 @@
 #include "base/trackable.h"
 #include "base/threading.h"
 #include "base/data_types.h"
-
-#include "wb_version.h"
 
 #define WBContext_VERSION 5
 
@@ -320,18 +318,14 @@ namespace wb {
     void show_exception(const std::string &operation, const grt::grt_runtime_error &exc);
 
     template <class R>
-    R execute_in_main_thread(const std::string &name, const std::function<R()> &function)
-      THROW(grt::grt_runtime_error) {
+    R execute_in_main_thread(const std::string &name, const std::function<R()> &function) {
       return bec::GRTManager::get()->get_dispatcher()->call_from_main_thread /*<R>*/ (function, true, false);
     }
-    void execute_in_main_thread(const std::string &name, const std::function<void()> &function, bool wait)
-      THROW(grt::grt_runtime_error);
+    void execute_in_main_thread(const std::string &name, const std::function<void()> &function, bool wait);
 
-    grt::ValueRef execute_in_grt_thread(const std::string &name, const std::function<grt::ValueRef()> &function)
-      THROW(grt::grt_runtime_error);
+    grt::ValueRef execute_in_grt_thread(const std::string &name, const std::function<grt::ValueRef()> &function);
 
-    void execute_async_in_grt_thread(const std::string &name, const std::function<grt::ValueRef()> &function)
-      THROW(grt::grt_runtime_error);
+    void execute_async_in_grt_thread(const std::string &name, const std::function<grt::ValueRef()> &function);
 
     bool activate_live_object(const GrtObjectRef &object);
 

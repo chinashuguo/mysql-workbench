@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -218,6 +218,12 @@ STANDARD_MOUSE_HANDLING(panel) // Add handling for mouse events.
   }
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityGroupRole;
+}
+
 @end
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -401,6 +407,12 @@ STANDARD_MOUSE_HANDLING(panel) // Add handling for mouse events.
 
 //----------------------------------------------------------------------------------------------------------------------
 
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityGroupRole;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
 static bool panel_create(::mforms::Panel *self, ::mforms::PanelType type) {
   return [[MFPanelImpl alloc] initWithObject: self type:type] != nil;
 }
@@ -437,7 +449,7 @@ static void panel_set_active(mforms::Panel *self, bool active) {
     MFPanelImpl *panel = self->get_data();
 
     if (panel) {
-      panel->mCheckButton.state = active ? NSOnState : NSOffState;
+      panel->mCheckButton.state = active ? NSControlStateValueOn : NSControlStateValueOff;
     }
   }
 }
@@ -449,7 +461,7 @@ static bool panel_get_active(mforms::Panel *self) {
     MFPanelImpl *panel = self->get_data();
 
     if (panel) {
-      return panel->mCheckButton.state == NSOnState;
+      return panel->mCheckButton.state == NSControlStateValueOn;
     }
   }
   return false;

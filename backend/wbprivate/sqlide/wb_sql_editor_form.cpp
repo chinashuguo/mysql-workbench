@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -462,10 +462,7 @@ void SqlEditorForm::restore_last_workspace() {
   if (_tabdock->view_count() == 0)
     new_sql_scratch_area(false);
 
-  // immediate autosave after openingls
-  auto_save();
-
-  // Gets the title for a NEW editor
+  // Gets the title for a NEW editor.
   _title = create_title();
   title_changed();
 }
@@ -1340,7 +1337,7 @@ grt::StringRef SqlEditorForm::do_connect(std::shared_ptr<sql::TunnelConnection> 
   } catch (sql::SQLException &exc) {
     logException("SqlEditorForm: exception in do_connect method", exc);
 
-    _version = bec::int_to_version(50717); // Set a meaningful default version if we cannot open a connection.
+    _version = bec::intToVersion(50717); // Set a meaningful default version if we cannot open a connection.
 
     switch (exc.getErrorCode()) {
       case 1820: // ER_MUST_CHANGE_PASSWORD_LOGIN
@@ -2725,7 +2722,7 @@ void SqlEditorForm::schema_meta_data_refreshed(const std::string &schema_name, b
   std::unique_ptr<sql::Statement> statement;
   RecMutexLock usr_dbc_conn_mutex(ensure_valid_usr_connection());
   if (_usr_dbc_conn->ref.get() != nullptr)
-    statement.reset(_usr_dbc_conn->ref.get()->createStatement());
+    statement.reset(_usr_dbc_conn->ref->createStatement());
 
   auto schemaSymbols = _databaseSymbols.getSymbolsOfType<SchemaSymbol>();
   for (SchemaSymbol *schemaSymbol : schemaSymbols) {
@@ -2744,6 +2741,7 @@ void SqlEditorForm::schema_meta_data_refreshed(const std::string &schema_name, b
           }
         }
       }
+
       for (auto view : *views) {
         ViewSymbol *viewSymbol = _databaseSymbols.addNewSymbol<ViewSymbol>(schemaSymbol, view);
 
@@ -2765,6 +2763,21 @@ void SqlEditorForm::schema_meta_data_refreshed(const std::string &schema_name, b
       for (auto function : *functions) {
         _databaseSymbols.addNewSymbol<StoredRoutineSymbol>(schemaSymbol, function, nullptr);
       }
+
+      if (statement != nullptr) {
+        auto metaInfo = _usr_dbc_conn->ref->getMetaData();
+        if (metaInfo->getDatabaseMajorVersion() > 7
+            || (metaInfo->getDatabaseMajorVersion() == 5 && metaInfo->getDatabaseMinorVersion() > 6)) {
+          std::auto_ptr<sql::ResultSet> rs(
+            statement->executeQuery("SELECT VARIABLE_NAME FROM performance_schema.user_variables_by_thread")
+          );
+
+          while (rs->next()) {
+            _databaseSymbols.addNewSymbol<UserVariableSymbol>(nullptr, "@" + rs->getString(1), nullptr);
+          }
+        }
+      }
+
       return;
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -515,9 +515,11 @@ static NSString *extender = @"≫";
 - (NSArray *)accessibilityChildren {
   [accessibilityChildren removeAllObjects];
   [accessibilityChildren addObjectsFromArray: accessibilityTabs];
-  [accessibilityChildren addObjectsFromArray: self.mTabView.accessibilityChildren];
+
   return accessibilityChildren;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 - (void)setTabView: (NSTabView *)tabView {
   if (self.mTabView != tabView) {
@@ -1899,7 +1901,7 @@ static NSString *extender = @"≫";
         else {
           mBusyTabIndicator = [[NSProgressIndicator alloc] initWithFrame: NSMakeRect(NSMaxX(rect) - 23, 2, 16, 16)];
           mBusyTabIndicator.controlSize = NSControlSizeSmall;
-          mBusyTabIndicator.style = NSProgressIndicatorSpinningStyle;
+          mBusyTabIndicator.style = NSProgressIndicatorStyleSpinning;
           [mBusyTabIndicator setIndeterminate: YES];
           [mBusyTabIndicator startAnimation: nil];
           [self addSubview: mBusyTabIndicator];

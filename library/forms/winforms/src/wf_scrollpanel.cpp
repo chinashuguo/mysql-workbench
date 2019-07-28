@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -199,10 +199,8 @@ public:
       Control ^ content = Controls[0];
       maxSize = content->Size;
     }
-
     int scrollAmount;
-    double wheelFactor = (m.WParam.ToInt64() >> 16) / (double)WHEEL_DELTA;
-
+    double wheelFactor = GET_WHEEL_DELTA_WPARAM(m.WParam.ToInt64()) / WHEEL_DELTA;
     DWORD scrollLines;
     SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &scrollLines, 0);
     if (maxSize.Height > ClientSize.Height) {
@@ -481,7 +479,7 @@ bool WheelMessageFilter::PreFilterMessage(Message % m) {
     Drawing::Point point = panel->PointToClient(Drawing::Point(cursorPoint.x, cursorPoint.y));
     if (panel->ClientRectangle.Contains(point)) {
       panel->WndProc(m);
-      return true;
+      return false;
     }
   }
 

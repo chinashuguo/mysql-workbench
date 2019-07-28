@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -109,6 +109,7 @@ DbConnectPanel::DbConnectPanel(DbConnectPanelFlags flags)
 
   _name_entry.set_name("Connection Name");
   _name_entry.setInternalName("connect_panel:table");
+  _table.set_name("Connection information");
   _table.set_row_count(flags & DbConnectPanelShowRDBMSCombo ? 4 : 2);
   _table.set_column_count(3);
 
@@ -144,7 +145,7 @@ DbConnectPanel::DbConnectPanel(DbConnectPanelFlags flags)
   _table.add(&_driver_sel, 1, 2, row, row + 1, mforms::HExpandFlag | mforms::HFillFlag | mforms::VFillFlag);
   _table.add(&_desc3, 2, 3, row, row + 1, mforms::HFillFlag);
 
-  _tab.set_name("Connection");
+  _tab.set_name("Connection Details");
   _params_panel.set_name("Parameters");
   _ssl_panel.set_name("SSL");
   _advanced_panel.set_name("Advanced");

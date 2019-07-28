@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -22,7 +22,7 @@
  */
 
 #include "image_cache.h"
-#include "linux_utilities/plugin_editor_base.h"
+#include "plugin_editor_base.h"
 #include "../backend/wb_editor_image.h"
 #include <gtkmm/image.h>
 #include <gtkmm/button.h>

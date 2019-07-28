@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -231,9 +231,10 @@ namespace ssh {
         break;
       }
     }
+
     // If we're here and it's still not ok, we throw exception as we can't open the channel.
     if (rc != SSH_OK)
-      throw SSHTunnelException("Unable to open channel\n");
+      throw SSHTunnelException("Unable to open channel");
 
     return channel;
   }
@@ -241,7 +242,7 @@ namespace ssh {
   void SSHTunnelHandler::prepareTunnel(int clientSocket) {
     std::unique_ptr<ssh::Channel> channel;
     try {
-      channel = std::move(openTunnel());
+      channel = openTunnel();
     } catch (ssh::SSHTunnelException &exc) {
       wbCloseSocket(clientSocket);
       logError("Unable to open tunnel. Exception when opening tunnel: %s\n", exc.what());

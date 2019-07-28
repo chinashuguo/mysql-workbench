@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License, version 2.0,
@@ -62,7 +62,6 @@ def get_linux_terminal_program():
                 return full_path
 
     return None
-
 
 @ModuleInfo.plugin('wb.tools.backupConnections', caption='Backup existing connections', accessibilityName="Backup Existing Connections")
 @ModuleInfo.export(grt.INT)
@@ -594,12 +593,136 @@ class CheckForUpdateThread(threading.Thread):
         try:
             import urllib2
             import json
-            urllib2.install_opener(urllib2.build_opener(urllib2.ProxyHandler()))
+            import base64
+
+            class LoginForm(mforms.Form):
+                def __init__(self):
+                    mforms.Form.__init__(self, None)
+
+                    self.set_title("Apply Changes to MySQL configuration File")
+                    content = mforms.newBox(False)
+                    content.set_padding(12)
+                    content.set_spacing(12)
+
+                    button_box = mforms.newBox(True)
+                    button_box.set_spacing(12)
+                    self.apply_btn = mforms.newButton()
+                    self.apply_btn.set_text("Apply")
+
+                    self.cancel_btn = mforms.newButton()
+                    self.cancel_btn.set_text("Cancel")
+                    self.cancel_btn.add_clicked_callback(self.cancel_clicked)
+
+                    content.add(button_box, False, True)
+                    self.set_content(content)
+                    self.set_size(640, 480)
+                    
+                    self.apply_btn.add_clicked_callback(self.apply_clicked)
+                    self.cancel_btn.add_clicked_callback(self.cancel_clicked)
+
+                def show(self):
+                    self.run_modal(self.apply_btn, self.cancel_btn)
+                def apply_clicked(self):
+                    self.close()
+
+                def cancel_clicked(self):
+                    self.close()
+
+            class ProxyAuthenticationHandler(urllib2.AbstractBasicAuthHandler, urllib2.BaseHandler):
+
+                auth_header = 'Proxy-authorization'
+                attempts = 0
+                
+                class ProxyAuthenticationForm(mforms.Form):
+                    def __init__(self):
+                        mforms.Form.__init__(self, None, mforms.FormDialogFrame)
+                        self.set_size(400, -1)
+
+                        box = mforms.newBox(False)
+                        box.set_spacing(12)
+                        box.set_padding(12)
+
+                        self.set_content(box)
+                        self.set_title("Proxy Authentication")
+
+                        content = mforms.newTable()
+
+                        content.set_padding(12);
+                        content.set_row_count(2);
+                        content.set_row_spacing(10);
+                        content.set_column_count(2);
+                        content.set_column_spacing(10);
+
+                        self.username = mforms.newTextEntry()
+                        self.password = mforms.newTextEntry(mforms.PasswordEntry)
+
+                        content.add(mforms.newLabel("User Name:"), 0, 1, 0, 1, mforms.HFillFlag | mforms.VFillFlag);
+                        content.add(self.username, 1, 2, 0, 1, mforms.HFillFlag | mforms.HExpandFlag);
+                        content.add(mforms.newLabel("Password:"), 0, 1, 1, 2, mforms.HFillFlag | mforms.VFillFlag);
+                        content.add(self.password, 1, 2, 1, 2, mforms.HFillFlag | mforms.HExpandFlag);
+
+                        box.add(content, True, True)
+
+                        self.ok = mforms.newButton()
+                        self.ok.set_text("OK")
+                        self.cancel = mforms.newButton()
+                        self.cancel.set_text("Cancel")
+                        button_box = mforms.newBox(True)
+                        mforms.Utilities.add_end_ok_cancel_buttons(button_box, self.ok, self.cancel)
+                        box.add_end(button_box, False, True)
+
+                        self.ok.add_clicked_callback(self.accepted)
+                        self.cancel.add_clicked_callback(self.canceled)
+                    def run(self):
+                        return self.run_modal(None, self.cancel)
+                    
+                    def accepted(self):
+                        self.end_modal(True)
+                    def canceled(self):
+                        self.end_modal(False)
+
+
+                def request_authentication(self):
+                    dialog = self.ProxyAuthenticationForm()
+                    self.result = dialog.run()
+                    self.username = dialog.username.get_string_value()
+                    self.password = dialog.password.get_string_value()
+
+                def http_error_407(self, req, fp, code, msg, headers):
+                    authority = req.host
+
+                    if self.attempts > 0:
+                        mforms.Utilities.show_error('Proxy Authentication', 'The proxy authentication was incorrect. Please try again.', "OK", "", "")
+
+                    mforms.Utilities.perform_from_main_thread(self.request_authentication, True)
+
+                    if self.result == False:
+                        return None
+
+                    self.attempts = self.attempts + 1
+
+                    raw = "%s:%s" % (self.username, self.password)
+                    auth = "Basic " + base64.b64encode(raw.encode()).decode("ascii")
+                    if req.get_header(self.auth_header, None) == auth:
+                        return None
+                    req.add_unredirected_header(self.auth_header, auth)
+
+                    return self.parent.open(req, timeout=req.timeout)
+
+            proxy_handler = urllib2.ProxyHandler()
+            proxy_auth_handler = ProxyAuthenticationHandler()
+
+            opener = urllib2.build_opener()
+            opener.add_handler(proxy_handler)
+            opener.add_handler(proxy_auth_handler)
+
+            urllib2.install_opener(opener)
+
             self.json = json.load(urllib2.urlopen("http://workbench.mysql.com/current-release")) 
         except Exception, error:
 
             self.json = None
-            self.error = "%s\n\nPlease verify your internet connection is available." % str(error)        
+            self.error = "%s\n\nPlease verify that your internet connection is available." % str(error)        
     
     def checkForUpdatesCallback(self):
         if self.isAlive():
@@ -689,32 +812,6 @@ class SSLWizard_GenerationTask:
         f.close()
       
 
-    def generate_certificate(self, tool, out_path, out_name, ca_cert, ca_key, config_file, days=3600):
-        key = os.path.join(out_path, out_name+"-key.pem")
-        req = os.path.join(out_path, out_name+"-req.pem")
-        cert = os.path.join(out_path, out_name+"-cert.pem")
-
-        serial_file = os.path.join(out_path, out_name+".serial")
-
-        req_cmd = [tool, "req", "-newkey", "rsa:2048", "-days", str(days), "-nodes", "-keyout", key, "-out", req, "-config", config_file]
-        if not self.run_command(req_cmd):
-            log_error("Unable to generate key.\n")
-            return False, key, req, cert
-
-        rsa_cmd = [tool, "rsa", "-in", key, "-out", key]
-        if not self.run_command(rsa_cmd):
-            log_error("Unable to generate key.\n")
-            return False, key, req, cert
-
-        rsa_cmd = [tool, "x509", "-req", "-in", req, "-days", str(days), "-CA", ca_cert, "-CAkey", ca_key,
-                         "-CAserial", serial_file, "-CAcreateserial",
-                         "-out", cert]
-        if not self.run_command(rsa_cmd):
-            log_error("Unable to generate certificate serial.\n")
-            return False, key, req, cert
-
-        return True, key, req, cert
-
     def run_command(self, command, output_to = subprocess.PIPE):
 
         try:
@@ -752,31 +849,64 @@ class SSLWizard_GenerationTask:
             self.display_error("Checking requirements", "The specified directory does not exist.")
             return False, None, None, None, None, None
 
-        log_debug2("Creating CA certificate...\n")
+        server_key = os.path.join(path, "server-key.pem")
+        server_req = os.path.join(path, "server-req.pem")
+        server_cert = os.path.join(path, "server-cert.pem")
         
-        f = open(ca_key, "w")
-        if not self.run_command([tool, "genrsa", "2048"], f):
-            self.display_error("Creating CA certificate...", "Could not generate RSA certificate")
-            return False, None, None, None, None, None
-
-        log_debug2("Creating CA key...\n")
+        client_key = os.path.join(path, "client-key.pem")
+        client_req = os.path.join(path, "client-req.pem")
+        client_cert = os.path.join(path, "client-cert.pem")
+        client_p12 = os.path.join(path, "client.p12")
         
-        req_cmd = [tool, "req", "-new", "-x509", "-nodes", "-days", str(days), "-key", ca_key, "-out", ca_cert, "-config", self.config_file["CA"]]
-        if not self.run_command(req_cmd):
-            self.display_error("Creating CA certificate...", "Could not generate keys")
-            return False, None, None, None, None, None
+        private_key = os.path.join(path, "private_key.pem")
+        key_store = os.path.join(path, "test-cert-store")
 
-        log_debug2("Create server certificate and self-sign\n")
-        result, server_key, server_req, server_cert = self.generate_certificate(tool, path, "server", ca_cert, ca_key, self.config_file["Server"])
-        if not result:
-            self.display_error("Create server certificate and self-sign", "Could not generate keys")
-            return False, server_key, server_req, server_cert
+        params = {
+            'keylen': 2048,
+            'days': 3650,
+            'ca_key': ca_key,
+            'ca_cert': ca_cert,
+            
+            'server_key': server_key,
+            'server_req': server_req,
+            'server_cert': server_cert,
 
-        log_debug2("Create client certificates and self-sign\n")
-        result, client_key, client_req, client_cert = self.generate_certificate(tool, path, "client", ca_cert, ca_key, self.config_file["Client"])
-        if not result:
-            self.display_error("Create client certificates and self-sign", "Could not generate keys")
-            return False, server_key, server_req, server_cert
+            'client_key': client_key,
+            'client_req': client_req,
+            'client_cert': client_cert,
+            'client_p12': client_p12,
+            
+            'key_store': key_store,
+            'private_key': private_key,
+            
+            "config_CA": self.config_file["CA"],
+            "config_server": self.config_file["Server"],
+            "config_client": self.config_file["Client"]
+        }
+        
+        commands = [
+            #Creating CA key
+            'openssl genrsa -out "%(ca_key)s" %(keylen)s' % params,
+            # Creating CA Certificate using the authority key
+            'openssl req -new -x509 -nodes -days %(days)s -key "%(ca_key)s" -out "%(ca_cert)s" -config "%(config_CA)s"' % params,
+
+            # Create server key and certificate sign request
+            'openssl req -newkey rsa:%(keylen)s -nodes -keyout "%(server_key)s" -out "%(server_req)s" -config "%(config_server)s"' % params,
+            # Encrypt the server private key
+            'openssl rsa -in "%(server_key)s" -out "%(server_key)s"' % params,
+            # Generate self-signed certificate (using the key+csr)
+            'openssl x509 -req -in "%(server_req)s" -days %(days)s -CA "%(ca_cert)s" -CAkey "%(ca_key)s" -set_serial 01 -out "%(server_cert)s" -extensions v3_req' % params,
+
+            # Create client key and certificate sign request
+            'openssl req -newkey rsa:%(keylen)s -nodes -keyout "%(client_key)s" -out "%(client_req)s" -config "%(config_client)s"' % params,
+            # Encrypt the client private key
+            'openssl rsa -in "%(client_key)s" -out "%(client_key)s"' % params,
+            # Generate self-signed certificate (using the key+csr)
+            'openssl x509 -req -in "%(client_req)s" -days %(days)s -CA "%(ca_cert)s" -CAkey "%(ca_key)s" -set_serial 01 -out "%(client_cert)s"' % params,
+        ]
+        
+        for command in commands:
+            self.run_command(shlex.split(command))
 
         return True, ca_cert, server_cert, server_key, client_cert, client_key
 
@@ -952,18 +1082,25 @@ class SSLWizard_GeneratePage(WizardPage):
         self.default_label.show(not value)
 
     def get_attributes(self, target):
+        def get_value_default(text_control, default_value):
+            current_value = text_control.get_string_value().encode('utf-8')
+            if not current_value:
+                return default_value
+            return current_value
+        
+        default_cn = 'localhost'
+        if target == 'CA':
+            default_cn = 'issuer'
+        
         l = []
-        l.append("C=%s"%self.country_code.get_string_value().encode('utf-8'))
-        l.append("ST=%s"%self.state_name.get_string_value().encode('utf-8'))
-        l.append("L=%s"%self.locality_name.get_string_value().encode('utf-8'))
-        l.append("O=%s"%self.org_name.get_string_value().encode('utf-8'))
-        l.append("OU=%s"%self.org_unit.get_string_value().encode('utf-8'))
-        l.append("CN=%s-%s"%(self.common_name.get_string_value().encode('utf-8'), target))
-        l.append("emailAddress=%s"%self.email_address.get_string_value().encode('utf-8'))
-        # filter out blank values
-        l = [s for s in l if s.partition("=")[-1]]
-        if not l:
-            l.append("C=US")
+        l.append("C=%s" % get_value_default(self.country_code, "US"))
+        l.append("ST=%s" % get_value_default(self.state_name, "California"))
+        l.append("L=%s" % get_value_default(self.locality_name, "Redwood Shores"))
+        l.append("O=%s" % get_value_default(self.org_name, "Oracle"))
+        l.append("OU=%s" % get_value_default(self.org_unit, "MySQL"))
+        l.append("CN=%s" % get_value_default(self.common_name, default_cn))
+        l.append("emailAddress=%s" % get_value_default(self.email_address, "any@localhost"))
+
         return l
 
     def create_ui(self):

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -79,6 +79,12 @@ static NSColor* colorFromHexString(const char* hexcolor) {
   return self;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityMenuBarItemRole;
+}
+
 @end
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -152,6 +158,12 @@ static NSColor* colorFromHexString(const char* hexcolor) {
   return mOwner->get_type();
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityMenuBarItemRole;
+}
+
 @end
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -181,7 +193,7 @@ static NSColor* colorFromHexString(const char* hexcolor) {
     mOwner->set_data(self);
     switch (item->get_type()) {
       case ToggleItem:
-        [self setButtonType: NSToggleButton];
+        [self setButtonType: NSButtonTypeToggle];
         [self.cell setHighlightsBy: NSChangeBackgroundCellMask];
         self.bordered = NO;
         break;
@@ -192,15 +204,15 @@ static NSColor* colorFromHexString(const char* hexcolor) {
         break;
 
       case SegmentedToggleItem:
-        [self setButtonType: NSToggleButton];
+        [self setButtonType: NSButtonTypeToggle];
         self.imagePosition = NSImageOnly;
         [self.cell setHighlightsBy: NSChangeBackgroundCellMask];
         self.bordered = NO;
         break;
 
       default: // ActionItem etc.
-        self.bezelStyle = NSTexturedRoundedBezelStyle;
-        self.buttonType = NSMomentaryPushInButton;
+        self.bezelStyle = NSBezelStyleTexturedRounded;
+        self.buttonType = NSButtonTypeMomentaryPushIn;
         self.bordered = NO;
 
         break;
@@ -242,7 +254,7 @@ static NSColor* colorFromHexString(const char* hexcolor) {
 - (void)perform: (id)sender {
   mOwner->callback();
   if (mToolPicker)
-    self.bordered = self.state == NSOnState;  
+    self.bordered = self.state == NSControlStateValueOn;  
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -250,7 +262,7 @@ static NSColor* colorFromHexString(const char* hexcolor) {
 - (void)setState: (NSInteger)value {
   super.state = value;
   if (mToolPicker)
-    self.bordered = value == NSOnState;
+    self.bordered = value == NSControlStateValueOn;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -284,9 +296,9 @@ static NSColor* colorFromHexString(const char* hexcolor) {
 
   if (!self.alternateImage && mOwner->get_type() == ToggleItem) {
     mToolPicker = YES;
-    [self setButtonType: NSOnOffButton];
+    [self setButtonType: NSButtonTypeOnOff];
     [self setBordered: NO];
-    self.bezelStyle = NSTexturedSquareBezelStyle;
+    self.bezelStyle = NSBezelStyleTexturedSquare;
     [self.cell setBackgroundColor: toolbar.backgroundColor];
 
     if (toolbar.type == mforms::SecondaryToolBar) {
@@ -308,8 +320,16 @@ static NSColor* colorFromHexString(const char* hexcolor) {
   [self sizeToFit];
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
 - (NSString*)stringValue {
   return self.title;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityButtonRole;
 }
 
 @end
@@ -383,6 +403,12 @@ static NSColor* colorFromHexString(const char* hexcolor) {
   [mToolbar resizeSubviewsWithOldSize: NSZeroSize];
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityStaticTextRole;
+}
+
 @end
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -435,6 +461,12 @@ static NSColor* colorFromHexString(const char* hexcolor) {
 - (void)setImage:(NSImage*)image {
   super.image = image;
   [self setFrameSize: image.size];
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityImageRole;
 }
 
 @end
@@ -493,6 +525,12 @@ static NSColor* colorFromHexString(const char* hexcolor) {
   mOwner->callback();
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityTextFieldRole;
+}
+
 @end
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -538,6 +576,12 @@ static NSColor* colorFromHexString(const char* hexcolor) {
 
 - (ToolBarItem*)toolBarItem {
   return mOwner;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityTextFieldRole;
 }
 
 @end
@@ -611,6 +655,12 @@ static NSColor* colorFromHexString(const char* hexcolor) {
     [self selectItemAtIndex: [self indexOfItemWithRepresentedObject: value]];
   else
     [self selectItemWithTitle: value];
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityPopUpButtonRole;
 }
 
 @end
@@ -925,6 +975,12 @@ static NSColor* colorFromHexString(const char* hexcolor) {
   [self removeFromSuperview];
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+- (NSAccessibilityRole)accessibilityRole {
+  return NSAccessibilityMenuBarRole;
+}
+
 @end
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1047,15 +1103,15 @@ static bool get_item_enabled(ToolBarItem *item) {
 
 static void set_item_checked(ToolBarItem *item, bool flag) {
   id tbitem = item->get_data();
-  if ([tbitem state] != (flag ? NSOnState : NSOffState))
-    [tbitem setState: flag ? NSOnState : NSOffState];
+  if ([tbitem state] != (flag ? NSControlStateValueOn : NSControlStateValueOff))
+    [tbitem setState: flag ? NSControlStateValueOn : NSControlStateValueOff];
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 static bool get_item_checked(ToolBarItem *item) {
   id tbitem = item->get_data();
-  return [tbitem state] == NSOnState;
+  return [tbitem state] == NSControlStateValueOn;
 }
 
 //----------------------------------------------------------------------------------------------------------------------

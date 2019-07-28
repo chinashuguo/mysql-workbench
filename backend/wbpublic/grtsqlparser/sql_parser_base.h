@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -27,6 +27,16 @@
 #include "grt/grt_manager.h"
 #include "grt.h"
 #include "grts/structs.db.h"
+
+#ifndef THROW
+#ifdef _MSC_VER
+#define THROW(...)
+#else
+#define THROW(...) throw(__VA_ARGS__)
+#endif
+#endif
+
+
 
 /** Encapsulates generic DBMS agnostic functionality for processing of SQL statements/scripts:
  * <li>definition of enumeration types and callbacks

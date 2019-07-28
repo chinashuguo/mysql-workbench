@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2012, 2019, Oracle and/or its affiliates. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License, version 2.0,
@@ -567,8 +567,8 @@ class TransferMainView(WizardProgressPage):
 REM Set the location for wbcopytables.exe in this variable
 set "wbcopytables_path=""" + os.getcwd() + """"
 
-if not ["%wbcopytables_path%"] == [] set "wbcopytables_path=%wbcopytables_path%\"\
-set "wbcopytables=%wbcopytables_path%wbcopytables.exe"
+if not [%wbcopytables_path%] == [] set wbcopytables_path=%wbcopytables_path%
+set wbcopytables=%wbcopytables_path%\\wbcopytables.exe
 
 if not exist "%wbcopytables%" (
 	echo "wbcopytables.exe doesn't exist in the supplied path. Please set 'wbcopytables_path' with the proper path(e.g. to Workbench binaries)"

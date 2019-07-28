@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1010"
+   LastUpgradeVersion = "1020"
    version = "2.0">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -55,7 +55,7 @@
       launchAutomaticallySubstyle = "2">
       <RemoteRunnable
          runnableDebuggingMode = "0"
-         RemotePath = "/Volumes/Extern/Work/MySQL/workbench/features2/DerivedData/MySQLWorkbench/Build/Products/Debug/MySQLWorkbench.app/Contents/MacOS/wbtests">
+         RemotePath = "/Volumes/Extern/Work/MySQL/workbench/master/DerivedData/MySQLWorkbench/Build/Products/Debug/MySQLWorkbench.app/Contents/MacOS/wbtests">
       </RemoteRunnable>
       <MacroExpansion>
          <BuildableReference
@@ -68,7 +68,7 @@
       </MacroExpansion>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "only mforms_code_editor_test"
+            argument = "only db_mysql_sql_export"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

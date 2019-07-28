@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -21,44 +21,12 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA 
  */
 
-#ifndef _STUB_WEBBROWSER_H_
-#define _STUB_WEBBROWSER_H_
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+#endif
 
-#include "stub_view.h"
+#ifdef __cplusplus
 
-namespace mforms {
-  namespace stub {
-
-    class WebBrowserWrapper : public ViewWrapper {
-    protected:
-      WebBrowserWrapper(::mforms::WebBrowser *self) : ViewWrapper(self) {
-      }
-
-      static bool create(WebBrowser *) {
-        return true;
-      }
-
-      static void set_html(WebBrowser *, const std::string &) {
-      }
-
-      static void navigate(WebBrowser *, const std::string &) {
-      }
-
-      static std::string get_document_title(WebBrowser *) {
-        return "";
-      }
-
-    public:
-      static void init() {
-        ::mforms::ControlFactory *f = ::mforms::ControlFactory::get_instance();
-
-        f->_webbrowser_impl.create = &WebBrowserWrapper::create;
-        f->_webbrowser_impl.get_document_title = &WebBrowserWrapper::get_document_title;
-        f->_webbrowser_impl.navigate = &WebBrowserWrapper::navigate;
-        f->_webbrowser_impl.set_html = &WebBrowserWrapper::set_html;
-      }
-    };
-  }
-}
+#include <iostream>
 
 #endif

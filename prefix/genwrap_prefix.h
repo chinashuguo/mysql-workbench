@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -21,36 +21,15 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA 
  */
 
-#ifndef _WB_WEBBROWSER_H_
-#define _WB_WEBBROWSER_H_
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+#endif
 
-#include "wb_backend_public_interface.h"
+#ifdef __cplusplus
 
-#include "mforms/appview.h"
-#include "mforms/webbrowser.h"
+#include <glib.h>
+#include <string.h>
+#include <pcre.h>
+#include <algorithm>
 
-namespace wb {
-  class WBContextUI;
-  /**
-   * This class implements the web browser interface in MySQL Workbench.
-   */
-  class MYSQLWBBACKEND_PUBLIC_FUNC WebBrowserView : public mforms::AppView {
-  private:
-    WBContextUI* _wbui;
-    mforms::WebBrowser _browser;
-    void document_loaded(const std::string& actualUrl);
-    bool handle_url(const std::string& url);
-    std::string _current_url;
-
-  public:
-    WebBrowserView(WBContextUI* wbui);
-    ~WebBrowserView();
-
-    void set_html(const std::string& code);
-    void navigate(const std::string& code);
-    virtual bool on_close();
-    std::string current_url();
-  };
-}
-
-#endif // #ifndef _WB_WEBBROWSER_H_
+#endif

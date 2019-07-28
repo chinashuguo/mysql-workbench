@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -123,8 +123,17 @@
   if (!owner.collectionView.allowsMultipleSelection || (!control && !shift && !command)) {
     if ([self.delegate respondsToSelector: @selector(clearSelection)])
       [self.delegate clearSelection];
+
     [self setSelected: YES];
-    [self.superview setNeedsDisplay: YES];
+    // We have to trigger refresh each of the other CollectionViewItemView
+    // as the superview setNeedsDisplay doesn't work anymore.
+    for (id view in self.superview.subviews) {
+      if ([view isKindOfClass: [MCollectionViewItemView class]]) {
+        [view setNeedsDisplay: YES];
+      } else if (view == self) { // Skip current as this has been triggered already.
+        continue;
+      }
+    }
   } else {
     // Add this item to the selection if shift is pressed (other modifiers are ignored in this case)
     // or toggle the selection state if control/command are held down (but no shift).
@@ -347,7 +356,7 @@ static void addRoundedRectToPath(CGContextRef context, CGRect rect, float ovalWi
 - (void)drawRect: (NSRect)rect {
   NSTextField *label = [self viewWithTag: 1];
   if (self.selected) {
-    CGContextRef context = [NSGraphicsContext currentContext].graphicsPort;
+    CGContextRef context = [NSGraphicsContext currentContext].CGContext;
 
     BOOL applicationActive = NSApp.keyWindow != nil;
     BOOL showSelected = self.activeCollectionView == self.superview;

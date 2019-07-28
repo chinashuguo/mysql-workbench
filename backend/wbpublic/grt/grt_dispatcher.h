@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -336,13 +336,11 @@ namespace bec {
     void execute_now(const GRTTaskBase::Ref task);
 
     void add_task(const GRTTaskBase::Ref task);
-    grt::ValueRef add_task_and_wait(const GRTTaskBase::Ref task) THROW(grt::grt_runtime_error);
+    grt::ValueRef add_task_and_wait(const GRTTaskBase::Ref task);
 
-    grt::ValueRef execute_sync_function(const std::string &name, const std::function<grt::ValueRef()> &function)
-      THROW(grt::grt_runtime_error);
+    grt::ValueRef execute_sync_function(const std::string &name, const std::function<grt::ValueRef()> &function);
 
-    void execute_async_function(const std::string &name, const std::function<grt::ValueRef()> &function)
-      THROW(grt::grt_runtime_error);
+    void execute_async_function(const std::string &name, const std::function<grt::ValueRef()> &function);
 
     void wait_task(const GRTTaskBase::Ref task);
 

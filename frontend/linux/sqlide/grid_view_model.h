@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -24,7 +24,7 @@
 #ifndef __GRID_VIEW_MODEL_H__
 #define __GRID_VIEW_MODEL_H__
 
-#include "linux_utilities/listmodel_wrapper.h"
+#include "listmodel_wrapper.h"
 #include "grt/tree_model.h"
 
 class GridView;

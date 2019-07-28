@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -70,7 +70,7 @@ namespace base {
       NotLocked,
     };
 
-    LockFile(const std::string &path) throw(std::invalid_argument, std::runtime_error, file_locked_error);
+    LockFile(const std::string &path);
     ~LockFile();
 #undef check // there's a #define check in osx
     static LockStatus check(const std::string &path);

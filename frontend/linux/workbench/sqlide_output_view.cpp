@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2007, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -22,12 +22,11 @@
  */
 
 #include "gtk/lf_mforms.h"
-#include "linux_utilities/gtk_helpers.h"
 #include "base/string_utilities.h"
 #include "base/util_functions.h"
 #include "base/wb_iterators.h"
 #include "base/log.h"
-#include "mforms/../gtk/lf_view.h"
+#include "gtk/lf_view.h"
 #include "objimpl/wrapper/mforms_ObjectReference_impl.h"
 #include "sqlide_form.h"
 #include "sqlide/wb_sql_editor_panel.h"

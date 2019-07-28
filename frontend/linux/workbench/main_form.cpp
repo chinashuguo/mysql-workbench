@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -22,7 +22,7 @@
  */
 
 #include "gtk/lf_mforms.h"
-#include "sqlide/grid_view.h"
+#include "grid_view.h"
 #include <gtkmm/statusbar.h>
 #include <gtkmm/eventbox.h>
 #include <gtkmm/fixed.h>
@@ -37,8 +37,8 @@
 #include "workbench/wb_overview.h"
 #include "model/wb_context_model.h"
 #include "model/wb_overview_physical.h"
-#include "linux_utilities/plugin_editor_base.h"
-#include "linux_utilities/form_view_base.h"
+#include "plugin_editor_base.h"
+#include "form_view_base.h"
 
 #include "diagram_size_form.h"
 
@@ -49,10 +49,10 @@
 #include "model_panel.h"
 #include "model_diagram_panel.h"
 #include "overview_panel.h"
-#include "find_panel.h"
+#include "mforms/find_panel.h"
 
-#include "linux_utilities/gtk_helpers.h"
-#include "linux_utilities/image_cache.h"
+#include "gtk_helpers.h"
+#include "image_cache.h"
 
 #include "base/string_utilities.h"
 #include "base/geometry.h"
@@ -1104,8 +1104,6 @@ void MainForm::lock_gui_becb(bool lock) {
 
 //------------------------------------------------------------------------------
 void MainForm::switch_page(Gtk::Widget *, guint pagenum) {
-  if (_gui_locked)
-    return;
   Gtk::Notebook *note = get_upper_note();
   Gtk::Widget *page = note->get_nth_page(pagenum);
   if (page) {
@@ -1484,7 +1482,7 @@ void MainForm::show_page_setup() {
   wb::WBContextUI::get()->get_wb()->execute_plugin("wb.print.setup");
 }
 
-#include <mforms.h>
+#include "mforms/mforms.h"
 #include "gtk/lf_view.h"
 
 static std::string get_resource_path(mforms::App *app, const std::string &file) {

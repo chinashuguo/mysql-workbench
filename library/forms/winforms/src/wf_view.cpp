@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -497,7 +497,7 @@ bool ViewWrapper::use_min_width_for_layout(Control ^ control) {
       (Panel::typeid ==
        control->GetType()) // Only the standard panel, not our derivation or we will cause an endless loop.
       || is<ComboBox>(control) || is<TreeViewAdv>(control) || is<ListBox>(control) || is<SplitContainer>(control) ||
-      is<System::Windows::Forms::WebBrowser>(control) || is<HtmlLabel>(control) || is<HtmlPanel>(control) ||
+      is<HtmlLabel>(control) || is<HtmlPanel>(control) ||
       is<ProgressBar>(control) || is<ScintillaControl>(control) || is<DataGridView>(control) || is<TextBox>(control);
   }
 
@@ -512,8 +512,7 @@ bool ViewWrapper::use_min_height_for_layout(Control ^ control) {
   if (!needsMinHeight) {
     needsMinHeight = is<TabControl>(control) || (Panel::typeid == control->GetType()) || is<ListBox>(control) ||
                      is<TreeViewAdv>(control) || is<SplitContainer>(control) ||
-                     is<System::Windows::Forms::WebBrowser>(control) || is<ScintillaControl>(control) ||
-                     is<DataGridView>(control);
+                     is<ScintillaControl>(control) || is<DataGridView>(control);
   }
 
   return needsMinHeight;
@@ -684,14 +683,14 @@ int ViewWrapper::get_preferred_height(mforms::View *backend) {
 
 //-------------------------------------------------------------------------------------------------
 
-int ViewWrapper::get_x(mforms::View *backend) {
+int ViewWrapper::get_x(const mforms::View *backend) {
   Control ^ control = GetManagedObject<Control>(backend);
   return control->Location.X;
 }
 
 //-------------------------------------------------------------------------------------------------
 
-int ViewWrapper::get_y(mforms::View *backend) {
+int ViewWrapper::get_y(const mforms::View *backend) {
   Control ^ control = GetManagedObject<Control>(backend);
   return control->Location.Y;
 }

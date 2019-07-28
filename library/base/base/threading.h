@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -140,8 +140,10 @@ namespace base {
   // how many resources are available (and hence how many threads can use them at the same time).
   struct BASELIBRARY_PUBLIC_FUNC Semaphore {
   public:
+    Semaphore();
     Semaphore(int initialCount);
     ~Semaphore();
+    Semaphore& operator=(const Semaphore& other) = delete;
 
     void post();
     void wait();

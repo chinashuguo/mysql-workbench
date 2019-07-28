@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -35,7 +35,7 @@
 #include <gtkmm/progressbar.h>
 #include <gtkmm/builder.h>
 
-#include "mforms.h"
+#include "mforms/mforms.h"
 #include "mforms/dockingpoint.h"
 #include "base/notifications.h"
 

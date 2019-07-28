@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2019, Oracle and/or its affiliates. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2.0,
@@ -168,6 +168,11 @@ public:
   std::condition_variable condition;
   int count;
 };
+
+Semaphore::Semaphore() {
+  _d = new Private();
+  _d->count = 0;
+}
 
 Semaphore::Semaphore(int initialCount) {
   _d = new Private();
